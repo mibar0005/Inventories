@@ -48,5 +48,45 @@ public class BeerController {
     }
 
 
+    /**
+     * PUT is a combination of GET by ID and POST
+     * This will return a ResponseEntity of NoContent
+     * This will take in a UUID and a Beer Object
+     * It will also use the @RequestBody and @PathVariable annotations
+     * Tip: @PathVariable value should be a regular string
+     * Make sure that the beerId for the endpoint, PathVariable, parameters and arguments matches!!!!
+     *
+     **/
+    @PutMapping("/{beerId}")
+    public ResponseEntity updateBeer(@PathVariable("beerId") UUID beerId, @RequestBody Beer beer) {
+
+        beerService.updateBeerById(beerId, beer);
+
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+
+    /**
+     * DELETE
+     */
+
+    @DeleteMapping("{beerId}")
+    public ResponseEntity deleteBeerById(@PathVariable("beerId") UUID beerId) {
+
+        beerService.deleteById(beerId);
+
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * PATCH
+     */
+    @PatchMapping("{beerId}")
+    public ResponseEntity patchBeerById(@PathVariable("beerId") UUID beerId, @RequestBody Beer beer) {
+
+        beerService.patchBeerById(beerId, beer);
+
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
 
 }

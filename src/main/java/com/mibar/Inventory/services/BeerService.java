@@ -12,4 +12,10 @@ public interface BeerService {
     Beer getBeerById(UUID id);
 
     Beer saveNewBeer(Beer beer);
+
+    void updateBeerById(UUID beerId, Beer beer);
+
+    void deleteById(UUID beerId);
+
+    void patchBeerById(UUID beerId, Beer beer);
 }
