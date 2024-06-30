@@ -2,7 +2,7 @@ package com.mibar.Inventory.controller;
 
 import com.mibar.Inventory.model.Beer;
 import com.mibar.Inventory.services.BeerService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Slf4j
-@AllArgsConstructor   //Creates the constructor for us at runtime (look at target folder)
+@RequiredArgsConstructor  //Creates the constructor for us at runtime (look at target folder)
 @RestController  //Sets up to return Response body (returns JSON and not HTML)
 @RequestMapping("/api/v1/beer")
 public class BeerController {
