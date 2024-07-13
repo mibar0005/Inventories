@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Builder //This gives us to project lomboks builder pattern which allows us to create objects with the POJO fields.
 @Data //Defines the properties (of fields)
-public class Beer {
+public class BeerDTO {
 
     private UUID id;
     private Integer version;

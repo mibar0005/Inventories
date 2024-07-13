@@ -1,7 +1,7 @@
 package com.mibar.Inventory.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mibar.Inventory.model.Beer;
+import com.mibar.Inventory.model.BeerDTO;
 import com.mibar.Inventory.services.BeerService;
 import com.mibar.Inventory.services.BeerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,18 +55,18 @@ class BeerControllerTest {
     ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     @Captor
-    ArgumentCaptor<Beer> beerArgumentCaptor;
+    ArgumentCaptor<BeerDTO> beerArgumentCaptor;
 
     @Test
     void testPatchBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().get(0);
 
         //We are creating a new beer object
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "New Name");
 
-        //mocking a patch call to our service with the new object being pased via object mapper
-        mockMvc.perform(patch( BeerController.BEER_PATH + "/" + beer.getId())
+        //mocking a patch call to our service with the new object being passed via object mapper
+        mockMvc.perform(patch( BeerController.BEER_PATH_ID, beer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(beerMap)))
@@ -82,9 +83,9 @@ class BeerControllerTest {
 
     @Test
     void testDeleteBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().get(0);
 
-        mockMvc.perform(delete(BeerController.BEER_PATH + "/" + beer.getId())
+        mockMvc.perform(delete(BeerController.BEER_PATH_ID, beer.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
@@ -99,29 +100,29 @@ class BeerControllerTest {
 
     @Test
     void testUpdateBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().get(0);
 
-        //We are using put method with out URL + beerId.
-        //We also use our obhectMapper to pass in the beer object and we are expecting a noContent response
-        mockMvc.perform(put(BeerController.BEER_PATH + "/"  + beer.getId())
+        //We are using put method without URL + beerId.
+        //We also use our objectMapper to pass in the beer object we are expecting a noContent response
+        mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(beer)))
                 .andExpect(status().isNoContent());
 
         //Verify --> used to verify that an action occurred
-        verify(beerService).updateBeerById(any(UUID.class), any(Beer.class));
+        verify(beerService).updateBeerById(any(UUID.class), any(BeerDTO.class));
     }
 
     @Test
     void testCreateNewBeer() throws Exception {
         //Creating a new beer object and setting version and id to null
-        Beer beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().get(0);
         beer.setVersion(null);
         beer.setId(null);
 
         //Given beerService to save a new beer (beer oject) will return a beer from beer service impl
-        given(beerService.saveNewBeer(any(Beer.class))).willReturn(beerServiceImpl.listBeers().get(1));
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers().get(1));
 
         //Use mockMvc to perform a post to the url, inside contentType, we need to add an additional field
         //.content() where we use our object mapper to write our beer object.
@@ -150,18 +151,30 @@ class BeerControllerTest {
 
     @Test
     void getBeerById() throws Exception {
-        Beer testBeer = beerServiceImpl.listBeers().get(0);
+        BeerDTO testBeer = beerServiceImpl.listBeers().get(0);
 
         //Here, what we are telling mockito is:
         //given beerService.getBeerById with any UUID class passed in, then return the test beer object
-        given(beerService.getBeerById(testBeer.getId())).willReturn(testBeer);
+        given(beerService.getBeerById(testBeer.getId())).willReturn(Optional.of(testBeer));
 
         //We are using the mock framework to perform a get function
-        mockMvc.perform(get(BeerController.BEER_PATH + "/" + testBeer.getId())
+        mockMvc.perform(get(BeerController.BEER_PATH_ID, testBeer.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(testBeer.getId().toString())))
                 .andExpect(jsonPath("$.beerName", is(testBeer.getBeerName())));
+    }
+
+    //Create a test for when a beer is not found
+    @Test
+    void getBeerByIdNotFound() throws Exception {
+
+        //Set up mockito to return that exception
+        given(beerService.getBeerById(any(UUID.class))).willReturn(Optional.empty());
+
+        //Mock the call to mvc with a status of isNotFound
+        mockMvc.perform(get(BeerController.BEER_PATH_ID, UUID.randomUUID()))
+                .andExpect(status().isNotFound());
     }
 }

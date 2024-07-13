@@ -1,21 +1,22 @@
 package com.mibar.Inventory.services;
 
-import com.mibar.Inventory.model.Customer;
+import com.mibar.Inventory.model.CustomerDTO;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface CustomerService {
 
-    Customer getCustomer(UUID uuid);
+    Optional<CustomerDTO> getCustomer(UUID uuid);
 
-    List<Customer> getAllCustomers();
+    List<CustomerDTO> getAllCustomers();
 
-    Customer addNewCustomer(Customer customer);
+    CustomerDTO addNewCustomer(CustomerDTO customer);
 
-    void updateCustomer(UUID id, Customer customer);
+    void updateCustomer(UUID id, CustomerDTO customer);
 
     void deleteCustomer(UUID customerId);
 
-    void patchCustomerById(UUID customerId, Customer customer);
+    void patchCustomerById(UUID customerId, CustomerDTO customer);
 }

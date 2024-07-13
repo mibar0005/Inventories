@@ -1,6 +1,6 @@
 package com.mibar.Inventory.controller;
 
-import com.mibar.Inventory.model.Beer;
+import com.mibar.Inventory.model.BeerDTO;
 import com.mibar.Inventory.services.BeerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,23 +25,25 @@ public class BeerController {
     private final BeerService beerService;
 
     @GetMapping(BEER_PATH)
-    public List<Beer> listBeers() {
+    public List<BeerDTO> listBeers() {
         return beerService.listBeers();
     }
 
 
     @GetMapping(BEER_PATH_ID)
-    public Beer getBeerById(@PathVariable("beerId") UUID beerId) {
+    public BeerDTO getBeerById(@PathVariable("beerId") UUID beerId) {
         log.debug("Get Beer by Id - in Controller - 1234");
-        return beerService.getBeerById(beerId);
+        //We are returning an optional value so we return the getBeerById or else throw not found exception
+        //The controller now has the logic to throw the 404 error
+        return beerService.getBeerById(beerId).orElseThrow(NotFoundException::new);
     }
 
-    //Return a ResponseEntity since we are creating a new object
+//    Return a ResponseEntity since we are creating a new object
 //    @RequestMapping(method = RequestMethod.POST)
 //    @RequestBody --> handles the post request body (otherwise the values you pass will appear as null)
     @PostMapping(BEER_PATH)
-    public ResponseEntity handlePost(@RequestBody Beer beer) {
-        Beer savedBeer = beerService.saveNewBeer(beer);
+    public ResponseEntity handlePost(@RequestBody BeerDTO beer) {
+        BeerDTO savedBeer = beerService.saveNewBeer(beer);
         //Return a ResponseEntity of http created (201)
 
         //Create an HTTP header
@@ -63,7 +65,7 @@ public class BeerController {
      *
      **/
     @PutMapping(BEER_PATH_ID)
-    public ResponseEntity updateBeer(@PathVariable("beerId") UUID beerId, @RequestBody Beer beer) {
+    public ResponseEntity updateBeer(@PathVariable("beerId") UUID beerId, @RequestBody BeerDTO beer) {
 
         beerService.updateBeerById(beerId, beer);
 
@@ -87,11 +89,23 @@ public class BeerController {
      * PATCH
      */
     @PatchMapping(BEER_PATH_ID)
-    public ResponseEntity patchBeerById(@PathVariable("beerId") UUID beerId, @RequestBody Beer beer) {
+    public ResponseEntity patchBeerById(@PathVariable("beerId") UUID beerId, @RequestBody BeerDTO beer) {
 
         beerService.patchBeerById(beerId, beer);
 
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
+
+
+    //Create an exception Handler
+    //This will return a ResponseEntity
+    //To have this handled by the framework we can annotate it with the @ExceptionHandler()
+    //and we can pass in the classes that we want to handle
+//    @ExceptionHandler(NotFoundException.class)
+//    public ResponseEntity handleNotFoundException() {
+//        //We can use a builder for this
+//        System.out.println("In Exception handler");
+//        return ResponseEntity.notFound().build();
+//    }
 
 }

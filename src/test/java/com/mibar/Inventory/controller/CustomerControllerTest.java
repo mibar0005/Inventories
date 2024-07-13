@@ -2,7 +2,7 @@ package com.mibar.Inventory.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mibar.Inventory.model.Customer;
+import com.mibar.Inventory.model.CustomerDTO;
 import com.mibar.Inventory.services.CustomerService;
 import com.mibar.Inventory.services.CustomerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,7 +46,7 @@ public class CustomerControllerTest {
     ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     @Captor
-    ArgumentCaptor<Customer> customerArgumentCaptor;
+    ArgumentCaptor<CustomerDTO> customerArgumentCaptor;
 
     @BeforeEach
     void setUp() {
@@ -54,12 +55,12 @@ public class CustomerControllerTest {
 
     @Test
     void testPatchCustomer() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
 
         Map<String, Object> customerMap = new HashMap<>();
         customerMap.put("name", "Fartholomeu");
 
-        mockMvc.perform(patch(CustomerController.CUSTOMER_PATH + "/" + customer.getId())
+        mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(customerMap)))
@@ -74,9 +75,9 @@ public class CustomerControllerTest {
 
     @Test
     void testDeleteCustomer() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
 
-        mockMvc.perform(delete(CustomerController.CUSTOMER_PATH + "/"  + customer.getId())
+        mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
@@ -87,26 +88,26 @@ public class CustomerControllerTest {
 
     @Test
     void testUpdateCustomer() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
 
-        mockMvc.perform(put(CustomerController.CUSTOMER_PATH + "/" + customer.getId())
+        mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(customer)))
                 .andExpect(status().isNoContent());
 
-        verify(customerService).updateCustomer(any(UUID.class), any(Customer.class));
+        verify(customerService).updateCustomer(any(UUID.class), any(CustomerDTO.class));
 
 
     }
 
     @Test
     void testCreateNewCustomer() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
         customer.setId(null);
         customer.setVersion(null);
 
-        given(customerService.addNewCustomer(any(Customer.class))).willReturn(customerServiceImpl.getAllCustomers().get(1));
+        given(customerService.addNewCustomer(any(CustomerDTO.class))).willReturn(customerServiceImpl.getAllCustomers().get(1));
 
         mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
                 .accept(MediaType.APPLICATION_JSON)
@@ -129,13 +130,12 @@ public class CustomerControllerTest {
     }
 
     @Test
-    void getBeerById() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+    void getCustomerById() throws Exception {
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
 
-        given(customerService.getCustomer(customer.getId())).willReturn(customer);
+        given(customerService.getCustomer(customer.getId())).willReturn(Optional.of(customer));
 
-        //We are using the mock framework to perform a get function
-        mockMvc.perform(get(CustomerController.CUSTOMER_PATH + "/" + customer.getId())
+        mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -143,5 +143,12 @@ public class CustomerControllerTest {
                 .andExpect(jsonPath("$.name", is(customer.getName())));
     }
 
+    @Test
+    void getCustomerByIdNotFound() throws Exception {
 
+        given(customerService.getCustomer(any(UUID.class))).willThrow(NotFoundException.class);
+
+        mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
 }
